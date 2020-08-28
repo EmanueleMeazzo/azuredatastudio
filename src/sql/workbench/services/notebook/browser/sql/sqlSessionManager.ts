@@ -510,9 +510,7 @@ export class SQLFuture extends Disposable implements FutureInternal {
 			let i = 0;
 			for (let set of resultsToUpdate) {
 				await queryRowsPromises[i];
-				if (set.rowCount < this.configuredMaxRows) {
-					this.sendResultSetAsIOPub(set);
-				}
+				this.sendResultSetAsIOPub(set);
 				i++;
 			}
 		} catch (err) {
