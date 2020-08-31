@@ -603,7 +603,7 @@ export class CellModel extends Disposable implements ICellModel {
 			if (!outputExists) {
 				this._outputs.push(this.rewriteOutputUrls(output));
 				// Only scroll on 1st output being added
-				let shouldScroll = this._outputs.length === 1 && !outputExists;
+				let shouldScroll = this._outputs.length === 1;
 				this.fireOutputsChanged(OutputChangeType.Add, shouldScroll);
 			} else {
 				this.fireOutputsChanged(OutputChangeType.Update, false, output.resultSet);

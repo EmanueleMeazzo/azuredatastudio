@@ -23,7 +23,7 @@ import { localize } from 'vs/nls';
 import { IAction } from 'vs/base/common/actions';
 import { AngularDisposable } from 'sql/base/browser/lifecycle';
 import { IMimeComponent } from 'sql/workbench/contrib/notebook/browser/outputs/mimeRegistry';
-import { ICellModel } from 'sql/workbench/services/notebook/browser/models/modelInterfaces';
+import { ICellModel, IOutputChangedEvent } from 'sql/workbench/services/notebook/browser/models/modelInterfaces';
 import { MimeModel } from 'sql/workbench/services/notebook/browser/outputs/mimemodel';
 import { GridTableState } from 'sql/workbench/common/editor/query/gridTableState';
 import { GridTableBase } from 'sql/workbench/contrib/query/browser/gridPanel';
@@ -39,6 +39,7 @@ import { ToggleableAction } from 'sql/workbench/contrib/notebook/browser/noteboo
 import { IInsightOptions } from 'sql/workbench/common/editor/query/chartState';
 import { NotebookChangeType, OutputChangeType } from 'sql/workbench/services/notebook/common/contracts';
 import { URI } from 'vs/base/common/uri';
+import * as outputProcessor from 'sql/workbench/contrib/notebook/browser/models/outputProcessor';
 
 @Component({
 	selector: GridOutputComponent.SELECTOR,
@@ -105,18 +106,35 @@ export class GridOutputComponent extends AngularDisposable implements IMimeCompo
 			let outputElement = <HTMLElement>this.output.nativeElement;
 			outputElement.appendChild(this._table.element);
 			this._register(attachTableStyler(this._table, this.themeService));
-			this._register(this.cellModel.onOutputsChanged(e => {
-				if (e.changeType === OutputChangeType.Update && e.resultSetSummary) {
-					let resultSet = e.resultSetSummary as ResultSetSummary;
-					if (resultSet.id === this._cellOutput.resultSet.id) {
-						this._table.updateResult(resultSet);
-					}
-				}
-			}));
 			this._table.onDidInsert();
 			this.layout();
 			this._initialized = true;
+			this._register(this.cellModel.onOutputsChanged(e => {
+				if (e.changeType === OutputChangeType.Update) {
+					this.updateOutput(e);
+				}
+			}));
+		} else {
+			// this._table = undefined;
+			// (<HTMLElement>this.output.nativeElement).removeChild((<HTMLElement>this.output.nativeElement).firstChild);
+			// let source = <IDataResource><any>this._bundleOptions.data[this.mimeType];
+			// let state = new GridTableState(0, 0);
+			// this._table = this.instantiationService.createInstance(DataResourceTable, source, this.cellModel, this.cellOutput, state);
+			// let outputElement = <HTMLElement>this.output.nativeElement;
+			// outputElement.appendChild(this._table.element);
+			// this._register(attachTableStyler(this._table, this.themeService));
+			// this._table.onDidInsert();
+			// this.layout();
+			// this._initialized = true;
 		}
+	}
+
+	updateOutput(e: IOutputChangedEvent): void {
+		this._cellOutput = e.outputs[0];
+		let options = outputProcessor.getBundleOptions({ value: this.cellOutput, trusted: true }); //TODO: trusted mode
+		this._bundleOptions = options;
+		// this.renderGrid();
+		this._table.updateResult(e.resultSetSummary); // TODO
 	}
 
 	layout(): void {
