@@ -84,7 +84,6 @@ steps:
 
 - script: |
     set -e
-    yarn sqllint
     yarn gulp hygiene
     yarn strict-vscode
     yarn valid-layers-check
